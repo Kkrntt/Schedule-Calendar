@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高機能カレンダーアプリ</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>マイ・カスタムカレンダー</h1>
+        
+        <div class="form-section">
+            <div class="form-row">
+                <input type="date" id="todo-date" required>
+                <input type="text" id="todo-title" placeholder="予定を入力" required>
+                
+                <select id="todo-color">
+    <option value="#e74c3c">⚠️ 課題（赤）</option>
+    <option value="#3498db">📖 予習・復習（青）</option>
+    <option value="#9b59b6">📝 小テスト（紫）</option>
+    <option value="#f1c40f">☕ その他（黄）</option>
+</select>
+            </div>
+            
+            <div class="form-row flex-end">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="is-weekly"> 毎週繰り返す (3ヶ月間)
+                </label>
+                <button id="add-btn">予定を追加</button>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <div id="calendar-container">
+                <div id="calendar"></div>
+            </div>
+            
+            <div id="todo-list-container">
+                <h2>タスク・チェックリスト</h2>
+                <ul id="todo-list">
+                    </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
