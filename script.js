@@ -6,6 +6,14 @@ const addBtn = document.getElementById('add-btn');
 const calendarEl = document.getElementById('calendar');
 const todoList = document.getElementById('todo-list');
 
+// 1. 共有・QRコード用の要素を取得
+const exportBtn = document.getElementById('export-btn');
+const importBtn = document.getElementById('import-btn');
+const importInput = document.getElementById('import-code');
+const qrModal = document.getElementById('qr-modal');
+const qrcodeEl = document.getElementById('qrcode');
+const closeQrBtn = document.getElementById('close-qr-btn');
+
 // ユーザー独自のデータの読み込み（LocalStorage）
 let schedules = JSON.parse(localStorage.getItem('proCalendarSchedules')) || [];
 
@@ -34,15 +42,12 @@ const calendar = new FullCalendar.Calendar(calendarEl, {
     locale: 'ja',
     events: getFormattedEvents(), 
     eventClick: function(info) {
-        // クリックされた予定が学校の固定行事かどうかを判定
         const isFixedEvent = SCHOOL_EVENTS.some(item => item.id === info.event.id);
-        
         if (isFixedEvent) {
             alert(`「${info.event.title}」は学校の公式行事のため、変更・削除はできません。`);
             return;
         }
-
-        // 【改良ポイント】クリックしたら、確認なしで即座に完了/未完了を切り替える
+        // クリックしたら即座に完了/未完了を切り替える
         toggleComplete(info.event.id);
     }
 });
@@ -113,22 +118,16 @@ addBtn.addEventListener('click', () => {
 // データの保存と画面の再描画
 function saveAndRefresh() {
     localStorage.setItem('proCalendarSchedules', JSON.stringify(schedules));
-    
-    // カレンダーの表示イベントをリフレッシュ
     calendar.removeAllEvents();
     calendar.addEventSource(getFormattedEvents()); 
-    
-    // チェックリストの表示をリフレッシュ
     renderCheckList();
 }
 
 // チェックリスト（TODOリスト）を表示する関数
 function renderCheckList() {
     todoList.innerHTML = '';
-
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
-
     const oneWeekLater = new Date();
     oneWeekLater.setDate(today.getDate() + 7);
     oneWeekLater.setHours(23, 59, 59, 999); 
@@ -143,7 +142,6 @@ function renderCheckList() {
         let itemEnd = item.end ? new Date(item.end) : new Date(item.start);
         if (item.end) itemEnd.setDate(itemEnd.getDate() - 1); 
         itemEnd.setHours(23, 59, 59, 999);
-
         return itemStart <= oneWeekLater && itemEnd >= today;
     });
 
@@ -160,7 +158,6 @@ function renderCheckList() {
     sortedSchedules.forEach(item => {
         const li = document.createElement('li');
         li.className = 'todo-item';
-
         const isChecked = item.completed ? 'checked' : '';
         const textClass = item.completed ? 'completed' : '';
         const weekStr = new Date(item.start).toLocaleDateString('ja-JP', { weekday: 'short' });
@@ -188,7 +185,7 @@ function renderCheckList() {
     });
 }
 
-// チェックボックスまたはカレンダーが押されたときに完了/未完了の状態を切り替える関数
+// 状態切り替え関数
 function toggleComplete(id) {
     schedules = schedules.map(item => {
         if (item.id === id) {
@@ -199,8 +196,90 @@ function toggleComplete(id) {
     saveAndRefresh();
 }
 
-// リストからユーザーの予定を削除する関数
+// 削除関数
 function deleteFromList(id) {
     schedules = schedules.filter(item => item.id !== id);
     saveAndRefresh();
 }
+
+// ==========================================
+// 🔗 【生成処理】QRコードでのデータ共有機能
+// ==========================================
+exportBtn.addEventListener('click', () => {
+    // 自分で追加した予定がない場合は生成しない
+    if (schedules.length === 0) {
+        alert('共有する予定がまだ登録されていません。新しく予定を追加してからボタンを押してください。');
+        return;
+    }
+
+    try {
+        // 1. 予定データをテキスト（文字列）に圧縮・変換
+        const jsonString = JSON.stringify(schedules);
+        const utf8Bytes = new TextEncoder().encode(jsonString);
+        const base64Code = btoa(String.fromCharCode(...utf8Bytes));
+
+        // 2. 前回のQRコード表示をクリア
+        qrcodeEl.innerHTML = '';
+
+        // 3. 変換したテキストを元にQRコード画像を自動生成
+        new QRCode(qrcodeEl, {
+            text: base64Code,
+            width: 256,
+            height: 256,
+            colorDark : "#000000",
+            colorLight : "#ffffff",
+            correctLevel : QRCode.CorrectLevel.L
+        });
+
+        // 4. ポップアップ画面を画面に表示
+        qrModal.style.display = 'flex';
+
+    } catch (e) {
+        alert('QRコードの生成に失敗しました。');
+        console.error(e);
+    }
+});
+
+// ポップアップを閉じる処理
+closeQrBtn.addEventListener('click', () => {
+    qrModal.style.display = 'none';
+});
+
+// コードから読み込み処理
+importBtn.addEventListener('click', () => {
+    const code = importInput.value.trim();
+    if (!code) {
+        alert('共有コードを入力、またはQRコードから読み取った文字を貼り付けてください。');
+        return;
+    }
+
+    if (!confirm('送られてきた予定をあなたのカレンダーに合流させますか？')) {
+        return;
+    }
+
+    try {
+        const jsonString = decodeURIComponent(atob(code).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        
+        const importedSchedules = JSON.parse(jsonString);
+
+        if (!Array.isArray(importedSchedules)) {
+            throw new Error('不適切なデータ形式です。');
+        }
+
+        importedSchedules.forEach(newIn => {
+            const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
+            if (!isExist) {
+                schedules.push(newIn);
+            }
+        });
+
+        saveAndRefresh();
+        importInput.value = ''; 
+        alert('予定の同期が成功しました！');
+
+    } catch (e) {
+        alert('正しい共有コードではありません。');
+    }
+});
