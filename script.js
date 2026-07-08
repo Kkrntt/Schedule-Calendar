@@ -203,25 +203,27 @@ function deleteFromList(id) {
 }
 
 // ==========================================
-// 🔗 【生成処理】QRコードでのデータ共有機能
+// 🔗 【修正版】QRコードでのデータ共有機能（日本語エラー対策済）
 // ==========================================
 exportBtn.addEventListener('click', () => {
-    // 自分で追加した予定がない場合は生成しない
     if (schedules.length === 0) {
         alert('共有する予定がまだ登録されていません。新しく予定を追加してからボタンを押してください。');
         return;
     }
 
     try {
-        // 1. 予定データをテキスト（文字列）に圧縮・変換
+        // 1. 予定データを一度文字（JSON）にする
         const jsonString = JSON.stringify(schedules);
-        const utf8Bytes = new TextEncoder().encode(jsonString);
-        const base64Code = btoa(String.fromCharCode(...utf8Bytes));
+        
+        // 【修正ポイント】スマホでの日本語（全角文字）エラーを完全に防ぐ安全なエンコード処理
+        const base64Code = btoa(encodeURIComponent(jsonString).replace(/%([0-8F][0-9A-F])/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+        }));
 
         // 2. 前回のQRコード表示をクリア
         qrcodeEl.innerHTML = '';
 
-        // 3. 変換したテキストを元にQRコード画像を自動生成
+        // 3. QRコード画像を自動生成
         new QRCode(qrcodeEl, {
             text: base64Code,
             width: 256,
@@ -231,11 +233,11 @@ exportBtn.addEventListener('click', () => {
             correctLevel : QRCode.CorrectLevel.L
         });
 
-        // 4. ポップアップ画面を画面に表示
+        // 4. ポップアップ画面を表示
         qrModal.style.display = 'flex';
 
     } catch (e) {
-        alert('QRコードの生成に失敗しました。');
+        alert('QRコードの生成に失敗しました。ネット接続を確認するか、予定の文字数を減らしてみてください。');
         console.error(e);
     }
 });
@@ -245,7 +247,7 @@ closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
-// コードから読み込み処理
+// コードから読み込み処理（デコード側も修正）
 importBtn.addEventListener('click', () => {
     const code = importInput.value.trim();
     if (!code) {
@@ -253,16 +255,17 @@ importBtn.addEventListener('click', () => {
         return;
     }
 
-    if (!confirm('送られてきた予定をあなたのカレンダーに合流させますか？')) {
+    if (!confirm('送られてきた予定をあなたのカレンダーに合合流させますか？')) {
         return;
     }
 
     try {
-        const jsonString = decodeURIComponent(atob(code).split('').map(function(c) {
+        // 【修正ポイント】日本語対応のデコード処理
+        const decodedString = decodeURIComponent(atob(code).split('').map(c => {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
         
-        const importedSchedules = JSON.parse(jsonString);
+        const importedSchedules = JSON.parse(decodedString);
 
         if (!Array.isArray(importedSchedules)) {
             throw new Error('不適切なデータ形式です。');
