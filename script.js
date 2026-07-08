@@ -6,7 +6,7 @@ const addBtn = document.getElementById('add-btn');
 const calendarEl = document.getElementById('calendar');
 const todoList = document.getElementById('todo-list');
 
-// 1. 共有・QRコード用の要素を取得
+// 共有・QRコード用の要素を取得
 const exportBtn = document.getElementById('export-btn');
 const importBtn = document.getElementById('import-btn');
 const importInput = document.getElementById('import-code');
@@ -47,8 +47,14 @@ const calendar = new FullCalendar.Calendar(calendarEl, {
             alert(`「${info.event.title}」は学校の公式行事のため、変更・削除はできません。`);
             return;
         }
-        // クリックしたら即座に完了/未完了を切り替える
-        toggleComplete(info.event.id);
+
+        // 【今回の修正】カレンダー上では「削除確認」だけを行う（1週間過ぎた過去の予定もここで消せる）
+        const targetEvent = schedules.find(item => item.id === info.event.id);
+        if (!targetEvent) return;
+
+        if (confirm(`「${targetEvent.title}」をカレンダーから完全に削除しますか？`)) {
+            deleteFromList(info.event.id);
+        }
     }
 });
 calendar.render();
@@ -61,11 +67,11 @@ function getFormattedEvents() {
     const userEvents = schedules.map(item => {
         return {
             id: item.id,
-            title: item.completed ? `✅ ${item.title}` : item.title,
+            title: item.completed ? `✅ ${item.title}` : item.title, // タスクリストの完了状態と連動
             start: item.start,
             color: item.color,
             allDay: item.allDay,
-            opacity: item.completed ? 0.5 : 1.0
+            opacity: item.completed ? 0.5 : 1.0 // タスクリストの完了状態と連動
         };
     });
     return [...SCHOOL_EVENTS, ...userEvents];
@@ -172,20 +178,21 @@ function renderCheckList() {
                 <span style="font-size: 12px; color: #7f8c8d; padding-right: 5px;">固定</span>
             `;
         } else {
+            // 【今回の修正】タスクリスト側はチェックボックス（完了機能）のみを残し、削除ボタンは非表示（またはカレンダーに集約）
+            // すっきりさせるために右側の削除ボタンを無くし、完了機能に特化させました
             li.innerHTML = `
                 <div class="todo-left">
                     <input type="checkbox" ${isChecked} onchange="toggleComplete('${item.id}')">
                     <span class="task-date">${item.start}(${weekStr})</span>
                     <span class="${textClass}" style="border-left: 4px solid ${item.color}; padding-left: 6px;">${item.title}</span>
                 </div>
-                <button class="del-task-btn" onclick="deleteFromList('${item.id}')">削除</button>
             `;
         }
         todoList.appendChild(li);
     });
 }
 
-// 状態切り替え関数
+// タスクリストのチェックボックスが押されたときに完了/未完了の状態を切り替える関数
 function toggleComplete(id) {
     schedules = schedules.map(item => {
         if (item.id === id) {
@@ -193,7 +200,7 @@ function toggleComplete(id) {
         }
         return item;
     });
-    saveAndRefresh();
+    saveAndRefresh(); // ここでカレンダー側の表示（✅マークと薄さ）も自動更新されます
 }
 
 // 削除関数
@@ -203,7 +210,7 @@ function deleteFromList(id) {
 }
 
 // ==========================================
-// 🔗 【修正版】QRコードでのデータ共有機能（日本語エラー対策済）
+// 🔗 QRコードでのデータ共有機能（日本語対応済）
 // ==========================================
 exportBtn.addEventListener('click', () => {
     if (schedules.length === 0) {
@@ -212,18 +219,13 @@ exportBtn.addEventListener('click', () => {
     }
 
     try {
-        // 1. 予定データを一度文字（JSON）にする
         const jsonString = JSON.stringify(schedules);
-        
-        // 【修正ポイント】スマホでの日本語（全角文字）エラーを完全に防ぐ安全なエンコード処理
         const base64Code = btoa(encodeURIComponent(jsonString).replace(/%([0-8F][0-9A-F])/g, (match, p1) => {
             return String.fromCharCode('0x' + p1);
         }));
 
-        // 2. 前回のQRコード表示をクリア
         qrcodeEl.innerHTML = '';
 
-        // 3. QRコード画像を自動生成
         new QRCode(qrcodeEl, {
             text: base64Code,
             width: 256,
@@ -233,7 +235,6 @@ exportBtn.addEventListener('click', () => {
             correctLevel : QRCode.CorrectLevel.L
         });
 
-        // 4. ポップアップ画面を表示
         qrModal.style.display = 'flex';
 
     } catch (e) {
@@ -242,12 +243,10 @@ exportBtn.addEventListener('click', () => {
     }
 });
 
-// ポップアップを閉じる処理
 closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
-// コードから読み込み処理（デコード側も修正）
 importBtn.addEventListener('click', () => {
     const code = importInput.value.trim();
     if (!code) {
@@ -255,12 +254,11 @@ importBtn.addEventListener('click', () => {
         return;
     }
 
-    if (!confirm('送られてきた予定をあなたのカレンダーに合合流させますか？')) {
+    if (!confirm('送られてきた予定をあなたのカレンダーに合流させますか？')) {
         return;
     }
 
     try {
-        // 【修正ポイント】日本語対応のデコード処理
         const decodedString = decodeURIComponent(atob(code).split('').map(c => {
             return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
         }).join(''));
