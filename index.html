@@ -29,12 +29,7 @@
                     <input type="checkbox" id="is-weekly"> 毎週繰り返す (3ヶ月間)
                 </label>
                 <button id="add-btn">予定を追加</button>
-            </div>
-
-            <div class="form-row" style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
-                <button id="export-btn" style="background-color: #27ae60;">📱 共有用QRコードを表示</button>
-                <input type="text" id="import-code" placeholder="友達のQRコードをカメラで読むか、コードをここに貼り付け">
-                <button id="import-btn" style="background-color: #2980b9;">📥 コードから読み込み</button>
+                <button id="export-btn" style="background-color: #27ae60; margin-left: 10px;">📱 共有用QRコードを作成</button>
             </div>
         </div>
 
@@ -53,15 +48,16 @@
     <div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:10px; text-align:center; max-width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
             <h3 style="margin-top:0; color:#2c3e50;">共有用QRコード</h3>
-            <p style="font-size:13px; color:#555;">スマホのカメラでこのQRコードをスキャンして、<br>出てきた文字列をコピーして使ってください。</p>
+            <p style="font-size:13px; color:#555;">周りの人にこのQRコードをスマホのカメラで<br>読み取ってもらってください。一瞬で予定が同期されます！</p>
             <div id="qrcode" style="display:inline-block; margin:20px 0;"></div>
             <div>
-                <button id="close-qr-btn" style="background-color:#7f8c8d; padding:8px 15px;">閉じる</button>
+                <button id="close-qr-btn" style="background-color:#7f8c8d; color:white; border:none; padding:8px 15px; border-radius:4px; cursor:pointer;">閉じる</button>
             </div>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js"></script>
-<body>
+</body>
 </html>
