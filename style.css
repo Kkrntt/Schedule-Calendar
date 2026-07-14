@@ -70,29 +70,70 @@ button {
 
 button:hover { background-color: #2c3e50; }
 
-/* 左右2カラムレイアウト */
+/* ==========================================
+   💻 パソコン（大画面）用の 2カラムレイアウト
+   ========================================== */
 .main-layout {
     display: flex;
-    gap: 25px;
+    gap: 20px;
 }
 
 #calendar-container {
-    flex: 2; /* カレンダーを広めにする */
+    flex: 1.8; /* カレンダーを広めにする */
     min-width: 0;
 }
 
+/* 右側の縦並びコラム（タスクとメモ帳） */
+.side-column {
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+}
+
+/* タスク・チェックリスト（PC版：カレンダーの高さに合わせて広く使う） */
 #todo-list-container {
-    flex: 1; /* チェックリストは右側 */
     background: #fcfcfc;
     border: 1px solid #eef0f1;
     border-radius: 6px;
-    padding: 20px;
-    max-height: 600px;
+    padding: 15px;
+    flex-grow: 1; /* 残りのスペースをいっぱいまで広げる */
+    max-height: 380px; /* カレンダーの下端と大体揃うように調整 */
     overflow-y: auto;
 }
 
+/* 🎒 持ち物・メモ帳（PC版：3行分の高さに制限してスクロール） */
+#memo-list-container {
+    background: #fcfcfc;
+    border: 1px solid #eef0f1;
+    border-radius: 6px;
+    padding: 15px;
+    height: 185px; /* 約3行分が表示される固定の高さ */
+    overflow-y: auto; /* はみ出たらスクロール */
+}
+
+/* メモ用の入力フォーム */
+.memo-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.memo-form input[type="text"] {
+    flex-grow: 1;
+    padding: 8px;
+    font-size: 14px;
+}
+
+.memo-form button {
+    padding: 8px 12px;
+    font-size: 14px;
+    background-color: #34495e;
+}
+
 /* チェックリストの見た目 */
-#todo-list {
+#todo-list, #memo-list {
     list-style: none;
     padding: 0;
     margin: 0;
@@ -102,7 +143,7 @@ button:hover { background-color: #2c3e50; }
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid #eee;
 }
 
@@ -127,19 +168,31 @@ button:hover { background-color: #2c3e50; }
     border-radius: 3px;
 }
 
+/* 🗑️ 削除ボタン（小さくて可愛いデザインに調整） */
 .del-task-btn {
-    background: none;
-    border: none;
+    background: #fdf2f2; /* ほんのり薄い赤 */
+    border: 1px solid #f9d5d5;
     color: #e74c3c;
     cursor: pointer;
-    font-size: 13px;
-    padding: 2px 5px;
+    font-size: 11px; /* 小さい文字 */
+    padding: 3px 8px; /* キュッと縮めたサイズ */
+    border-radius: 4px;
+    font-weight: bold;
+    transition: all 0.2s ease;
+    display: inline-block;
 }
-.del-task-btn:hover { text-decoration: underline; }
+
+.del-task-btn:hover {
+    background: #e74c3c;
+    color: #fff;
+    border-color: #e74c3c;
+    text-decoration: none;
+}
 
 /* 土日の色 */
 .fc-day-sat a { color: #3498db; }
 .fc-day-sun a { color: #e74c3c; }
+
 
 /* ==========================================
    📱 スマホ・縦画面用のレスポンシブデザイン
@@ -191,42 +244,18 @@ button:hover { background-color: #2c3e50; }
         font-size: 15px;
     }
 
-    /* 【ここが重要】左右2画面を、縦1列に組み替える */
+    /* 左右2カラムを、縦1列に組み替える */
     .main-layout {
         flex-direction: column;
-        gap: 20px;
+        gap: 15px;
     }
 
-    /* カレンダーとタスクリストの横幅をそれぞれ100%にする */
-    #calendar-container, 
-    #todo-list-container {
+    /* スマホ時は右コラムの枠組みを解除して縦並びにする */
+    .side-column {
         flex: none;
         width: 100%;
-        box-sizing: border-box;
+        gap: 15px;
     }
 
-    /* スマホ画面に合わせてカレンダーの文字や高さを微調整 */
-    .fc {
-        font-size: 12px; /* 日付の数字などを少し小さく */
-    }
-    
-    .fc .fc-toolbar-title {
-        font-size: 1.2rem; /* 「2026年7月」などの文字サイズ */
-    }
-
-    .fc .fc-button {
-        padding: 4px 8px; /* 前月・次月ボタンをスマホサイズに */
-        font-size: 12px;
-    }
-
-    /* タスクリストの見た目もスマホ用に最適化 */
-    .todo-item {
-        padding: 10px;
-        font-size: 14px;
-    }
-
-    .task-date {
-        padding: 2px 6px;
-        font-size: 11px;
-    }
-}
+    /* カレンダー、タスク、メモ帳の横幅をそれぞれ100%にする */
+    #calendar

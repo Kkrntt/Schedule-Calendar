@@ -302,3 +302,92 @@ function checkIncomingShare() {
         console.error(e);
     }
 }
+
+// =======================================================
+// 🎒 独立した持ち物・メモ帳システム (新規追加)
+// =======================================================
+
+const memoInput = document.getElementById('memo-input');
+const memoAddBtn = document.getElementById('memo-add-btn');
+const memoListEl = document.getElementById('memo-list');
+
+// ローカルストレージからメモを読み込み
+let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
+
+// 最初の読み込み時に表示
+renderMemoList();
+
+// メモ追加イベント
+memoAddBtn.addEventListener('click', addMemoItem);
+memoInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addMemoItem();
+});
+
+function addMemoItem() {
+    const text = memoInput.value.trim();
+    if (!text) return;
+
+    const newMemo = {
+        id: 'memo-' + Date.now(),
+        text: text,
+        completed: false
+    };
+
+    memoList.push(newMemo);
+    saveAndRefreshMemos();
+    memoInput.value = '';
+}
+
+// メモの表示更新
+function renderMemoList() {
+    memoListEl.innerHTML = '';
+
+    if (memoList.length === 0) {
+        memoListEl.innerHTML = '<li class="todo-item" style="color: #aaa; justify-content: center;">メモはありません</li>';
+        return;
+    }
+
+    // グローバルに関数を公開（HTMLのonchange/onclickから呼べるようにする）
+    window.toggleMemoComplete = toggleMemoComplete;
+    window.deleteMemo = deleteMemo;
+
+    memoList.forEach(item => {
+        const li = document.createElement('li');
+        li.className = 'todo-item';
+        
+        const isChecked = item.completed ? 'checked' : '';
+        const textClass = item.completed ? 'completed' : '';
+
+        li.innerHTML = `
+            <div class="todo-left">
+                <input type="checkbox" ${isChecked} onchange="toggleMemoComplete('${item.id}')">
+                <span class="${textClass}">${item.text}</span>
+            </div>
+            <button class="del-task-btn" onclick="deleteMemo('${item.id}')">削除</button>
+        `;
+        memoListEl.appendChild(li);
+    });
+}
+
+// 完了・未完了の切り替え
+function toggleMemoComplete(id) {
+    memoList = memoList.map(item => {
+        if (item.id === id) {
+            item.completed = !item.completed;
+        }
+        return item;
+    });
+    saveAndRefreshMemos();
+}
+
+// メモの削除
+function deleteMemo(id) {
+    memoList = memoList.filter(item => item.id !== id);
+    saveAndRefreshMemos();
+}
+
+// データの保存と再描画
+function saveAndRefreshMemos() {
+    localStorage.setItem('proCalendarMemos', JSON.stringify(memoList));
+    renderMemoList();
+}
