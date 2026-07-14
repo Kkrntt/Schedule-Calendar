@@ -12,7 +12,6 @@ const qrcodeEl = document.getElementById('qrcode');
 const closeQrBtn = document.getElementById('close-qr-btn');
 
 // ⚠️【最重要】ここにあなたのGitHub PagesのURL（末尾に / をつける）を貼り付けてください！
-// 例: "https://yourname.github.io/schedule-app/"
 const MY_SITE_URL = "https://kkrntt.github.io/Schedule-Calendar/"; 
 
 // ユーザー独自のデータの読み込み
@@ -205,7 +204,6 @@ function deleteFromList(id) {
 // 🔗 【完全版】通信エラーなし！超圧縮・URL埋め込み型QR共有システム
 // =======================================================
 
-// 1. 予定データを極限まで圧縮して、URLにしてQRコードを表示する
 exportBtn.addEventListener('click', () => {
     if (schedules.length === 0) {
         alert('共有する予定がありません。新しく予定を追加してから押してください。');
@@ -214,29 +212,24 @@ exportBtn.addEventListener('click', () => {
 
     try {
         const jsonString = JSON.stringify(schedules);
-        
-        // 【超圧縮処理】日本語のデータをZIP形式のようにギューッと小さくします
         const byteArray = new TextEncoder().encode(jsonString);
         const compressed = pako.deflate(byteArray);
         
-        // 圧縮したデータをURLに載せられる文字に変換（Base64URL）
         const base64Str = btoa(String.fromCharCode(...compressed))
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=+$/, '');
 
-        // 友達が読み取る用のURLを作成（自分のサイトURL + ?q=圧縮データ）
         const shareUrl = `${MY_SITE_URL}?q=${base64Str}`;
 
-        // QRコード表示領域をクリアして再生成
         qrcodeEl.innerHTML = '';
         new QRCode(qrcodeEl, {
-            text: shareUrl, // 外部サーバーを一切使わず、このURLを開くだけで同期できます！
+            text: shareUrl,
             width: 256,
             height: 256,
             colorDark : "#000000",
             colorLight : "#ffffff",
-            correctLevel : QRCode.CorrectLevel.L // 圧縮しているのでドットも細かくなりすぎません
+            correctLevel : QRCode.CorrectLevel.L
         });
 
         qrModal.style.display = 'flex';
@@ -251,14 +244,12 @@ closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
-// 2. アクセスされたURLに「?q=XXX」がついているかチェックして解凍する（受信処理）
 function checkIncomingShare() {
     const urlParams = new URLSearchParams(window.location.search);
     const compressedBase64 = urlParams.get('q');
 
-    if (!compressedBase64) return; // 共有データがなければ通常の起動
+    if (!compressedBase64) return;
 
-    // URLの見た目を綺麗に戻す（?q=... を消す）
     window.history.replaceState({}, document.title, window.location.pathname);
 
     if (!confirm('📥 新しい予定データが届きました！\nあなたのカレンダーに合流（同期）させますか？')) {
@@ -266,7 +257,6 @@ function checkIncomingShare() {
     }
 
     try {
-        // Base64URL形式を元に戻す
         let base64 = compressedBase64.replace(/-/g, '+').replace(/_/g, '/');
         while (base64.length % 4) { base64 += '='; }
         
@@ -277,7 +267,6 @@ function checkIncomingShare() {
             bytes[i] = binaryString.charCodeAt(i);
         }
 
-        // 【解凍処理】圧縮されたデータを元の文字に戻す
         const decompressed = pako.inflate(bytes);
         const jsonString = new TextDecoder().decode(decompressed);
         const importedSchedules = JSON.parse(jsonString);
@@ -286,7 +275,6 @@ function checkIncomingShare() {
             throw new Error('データ形式が正しくありません。');
         }
 
-        // 重複を除外してマージ
         importedSchedules.forEach(newIn => {
             const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
             if (!isExist) {
@@ -303,21 +291,20 @@ function checkIncomingShare() {
     }
 }
 
+
 // =======================================================
-// 🎒 独立した持ち物・メモ帳システム (新規追加)
+// 🎒 独立した持ち物・メモ帳システム
 // =======================================================
 
 const memoInput = document.getElementById('memo-input');
 const memoAddBtn = document.getElementById('memo-add-btn');
 const memoListEl = document.getElementById('memo-list');
 
-// ローカルストレージからメモを読み込み
 let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
 
-// 最初の読み込み時に表示
+// 初期表示とイベントの紐付け
 renderMemoList();
 
-// メモ追加イベント
 memoAddBtn.addEventListener('click', addMemoItem);
 memoInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') addMemoItem();
@@ -338,7 +325,6 @@ function addMemoItem() {
     memoInput.value = '';
 }
 
-// メモの表示更新
 function renderMemoList() {
     memoListEl.innerHTML = '';
 
@@ -347,7 +333,6 @@ function renderMemoList() {
         return;
     }
 
-    // グローバルに関数を公開（HTMLのonchange/onclickから呼べるようにする）
     window.toggleMemoComplete = toggleMemoComplete;
     window.deleteMemo = deleteMemo;
 
@@ -369,7 +354,6 @@ function renderMemoList() {
     });
 }
 
-// 完了・未完了の切り替え
 function toggleMemoComplete(id) {
     memoList = memoList.map(item => {
         if (item.id === id) {
@@ -380,14 +364,15 @@ function toggleMemoComplete(id) {
     saveAndRefreshMemos();
 }
 
-// メモの削除
 function deleteMemo(id) {
     memoList = memoList.filter(item => item.id !== id);
     saveAndRefreshMemos();
 }
 
-// データの保存と再描画
 function saveAndRefreshMemos() {
     localStorage.setItem('proCalendarMemos', JSON.stringify(memoList));
     renderMemoList();
 }
+
+// 最初の起動時用ロード
+renderCheckList();
