@@ -125,10 +125,17 @@ function saveAndRefresh() {
 }
 
 // チェックリスト表示
+// 現在選択されているタブを管理する変数（デフォルトは1週間分 'week'）
+let currentTab = 'week';
+
+// チェックリスト表示（タブ切り替え対応版）
 function renderCheckList() {
     todoList.innerHTML = '';
+    
+    // 今日の日付の基準を作成（時間・分・秒を0にして日付だけで比較できるようにする）
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
+    
     const oneWeekLater = new Date();
     oneWeekLater.setDate(today.getDate() + 7);
     oneWeekLater.setHours(23, 59, 59, 999); 
@@ -138,18 +145,29 @@ function renderCheckList() {
         ...schedules
     ];
 
+    // 選択されているタブに応じてフィルター条件を切り替える
     const filteredSchedules = allItems.filter(item => {
         const itemStart = new Date(item.start);
+        itemStart.setHours(0, 0, 0, 0); // 比較のために時間を合わせる
+
         let itemEnd = item.end ? new Date(item.end) : new Date(item.start);
         if (item.end) itemEnd.setDate(itemEnd.getDate() - 1); 
         itemEnd.setHours(23, 59, 59, 999);
-        return itemStart <= oneWeekLater && itemEnd >= today;
+
+        if (currentTab === 'today') {
+            // 【今日だけ】予定の開始日から終了日の間に「今日」が含まれているか
+            return itemStart <= today && itemEnd >= today;
+        } else {
+            // 【直近1週間】以前と同様の条件
+            return itemStart <= oneWeekLater && itemEnd >= today;
+        }
     });
 
     const sortedSchedules = filteredSchedules.sort((a, b) => new Date(a.start) - new Date(b.start));
 
     if (sortedSchedules.length === 0) {
-        todoList.innerHTML = '<li class="todo-item" style="color: #aaa; justify-content: center;">直近1週間の予定はありません</li>';
+        const noTaskMsg = currentTab === 'today' ? '今日の予定はありません' : '直近1週間の予定はありません';
+        todoList.innerHTML = `<li class="todo-item" style="color: #aaa; justify-content: center;">${noTaskMsg}</li>`;
         return;
     }
 
@@ -184,21 +202,25 @@ function renderCheckList() {
     });
 }
 
-function toggleComplete(id) {
-    schedules = schedules.map(item => {
-        if (item.id === id) {
-            item.completed = !item.completed;
-        }
-        return item;
+// 👇 ここからタブのクリックイベント処理を追加（ファイルの末尾付近などに追加してください）
+const tabWeekBtn = document.getElementById('tab-week');
+const tabTodayBtn = document.getElementById('tab-today');
+
+if (tabWeekBtn && tabTodayBtn) {
+    tabWeekBtn.addEventListener('click', () => {
+        currentTab = 'week';
+        tabWeekBtn.classList.add('active');
+        tabTodayBtn.classList.remove('active');
+        renderCheckList();
     });
-    saveAndRefresh();
-}
 
-function deleteFromList(id) {
-    schedules = schedules.filter(item => item.id !== id);
-    saveAndRefresh();
+    tabTodayBtn.addEventListener('click', () => {
+        currentTab = 'today';
+        tabTodayBtn.classList.add('active');
+        tabWeekBtn.classList.remove('active');
+        renderCheckList();
+    });
 }
-
 
 // =======================================================
 // 🔗 【完全版】通信エラーなし！超圧縮・URL埋め込み型QR共有システム

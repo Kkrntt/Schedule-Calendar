@@ -34,13 +34,19 @@
         </div>
 
         <div class="main-layout">
+            
             <div id="calendar-container">
                 <div id="calendar"></div>
             </div>
             
             <div class="side-column">
+                
                 <div id="todo-list-container">
                     <h2>タスク・チェックリスト</h2>
+                    <div class="task-tabs">
+                        <button id="tab-week" class="task-tab active">直近1週間</button>
+                        <button id="tab-today" class="task-tab">今日だけ</button>
+                    </div>
                     <ul id="todo-list"></ul>
                 </div>
 
@@ -52,11 +58,8 @@
                     </div>
                     <ul id="memo-list"></ul>
                 </div>
-            </div>
-        </div>
-    </div>
 
-    <div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
+            </div> </div> </div> <div id="qr-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9999; justify-content:center; align-items:center;">
         <div style="background:white; padding:30px; border-radius:10px; text-align:center; max-width:90%; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
             <h3 style="margin-top:0; color:#2c3e50;">共有用QRコード</h3>
             <p style="font-size:13px; color:#555;">周りの人にこのQRコードをスマホのカメラで<br>読み取ってもらってください。一瞬で予定が同期されます！</p>
