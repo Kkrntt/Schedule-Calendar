@@ -124,6 +124,23 @@ function saveAndRefresh() {
     renderCheckList();
 }
 
+// カレンダー予定削除用関数の追加
+function deleteFromList(id) {
+    schedules = schedules.filter(item => item.id !== id);
+    saveAndRefresh();
+}
+
+// チェックリストの完了トグル関数の追加
+function toggleComplete(id) {
+    schedules = schedules.map(item => {
+        if (item.id === id) {
+            item.completed = !item.completed;
+        }
+        return item;
+    });
+    saveAndRefresh();
+}
+
 // チェックリスト表示
 // 現在選択されているタブを管理する変数（デフォルトは1週間分 'week'）
 let currentTab = 'week';
@@ -151,7 +168,10 @@ function renderCheckList() {
         itemStart.setHours(0, 0, 0, 0); // 比較のために時間を合わせる
 
         let itemEnd = item.end ? new Date(item.end) : new Date(item.start);
-        if (item.end) itemEnd.setDate(itemEnd.getDate() - 1); 
+        if (item.end) {
+            itemEnd = new Date(item.end);
+            itemEnd.setDate(itemEnd.getDate() - 1); 
+        }
         itemEnd.setHours(23, 59, 59, 999);
 
         if (currentTab === 'today') {
@@ -202,7 +222,7 @@ function renderCheckList() {
     });
 }
 
-// 👇 ここからタブのクリックイベント処理を追加（ファイルの末尾付近などに追加してください）
+// 👇 ここからタブのクリックイベント処理を追加
 const tabWeekBtn = document.getElementById('tab-week');
 const tabTodayBtn = document.getElementById('tab-today');
 
