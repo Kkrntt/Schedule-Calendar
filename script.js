@@ -247,13 +247,26 @@ if (tabWeekBtn && tabTodayBtn) {
 // =======================================================
 
 exportBtn.addEventListener('click', () => {
-    if (schedules.length === 0) {
-        alert('共有する予定がありません。新しく予定を追加してから押してください。');
+    // 1. 「今日」の基準を作成（時間を 00:00:00 にして日付のみで比較）
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // 2. 今日以降の予定だけをフィルターする（過去の予定は除外）
+    const futureSchedules = schedules.filter(item => {
+        const eventDate = new Date(item.start);
+        eventDate.setHours(0, 0, 0, 0);
+        return eventDate >= today; // 今日以降の予定なら残す
+    });
+
+    // 3. 共有する予定が1つもない場合のチェック
+    if (futureSchedules.length === 0) {
+        alert('今日以降の予定がありません。未来の予定を追加してからQRコードを作成してください。');
         return;
     }
 
     try {
-        const jsonString = JSON.stringify(schedules);
+        // 4. フィルターした「今日以降のデータのみ（futureSchedules）」を圧縮する
+        const jsonString = JSON.stringify(futureSchedules);
         const byteArray = new TextEncoder().encode(jsonString);
         const compressed = pako.deflate(byteArray);
         
