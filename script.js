@@ -1,3 +1,6 @@
+// =======================================================
+// 📌 要素の取得と初期設定
+// =======================================================
 const dateInput = document.getElementById('todo-date');
 const titleInput = document.getElementById('todo-title');
 const colorInput = document.getElementById('todo-color');
@@ -11,7 +14,7 @@ const qrModal = document.getElementById('qr-modal');
 const qrcodeEl = document.getElementById('qrcode');
 const closeQrBtn = document.getElementById('close-qr-btn');
 
-// ⚠️【最重要】ここにあなたのGitHub PagesのURL（末尾に / をつける）を貼り付けてください！
+// ⚠️【最重要】ご自身のGitHub PagesのURL（末尾に / ）を記述してください
 const MY_SITE_URL = "https://kkrntt.github.io/Schedule-Calendar/"; 
 
 // ユーザー独自のデータの読み込み
@@ -25,6 +28,7 @@ const SCHOOL_EVENTS = [
     { id: 'school-4', title: '✍️ 2学期中間試験', start: '2026-09-29', end: '2026-10-03', color: '#c0392b', allDay: true, isFixed: true } 
 ];
 
+// 日付フォーマット関数 (YYYY-MM-DD)
 function formatDate(date) {
     const y = date.getFullYear();
     const m = String(date.getMonth() + 1).padStart(2, '0');
@@ -32,9 +36,13 @@ function formatDate(date) {
     return `${y}-${m}-${d}`;
 }
 
+// 日付入力欄の初期値を「今日」に設定
 dateInput.value = formatDate(new Date());
 
-// カレンダーの初期化
+
+// =======================================================
+// 🗓️ FullCalendar の初期化と描画
+// =======================================================
 const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
     locale: 'ja',
@@ -55,10 +63,15 @@ const calendar = new FullCalendar.Calendar(calendarEl, {
 });
 calendar.render();
 
-// 【新機能】ページが開かれたとき、URLに共有データが含まれているかチェックする（受信処理）
+// ページ読み込み時にURL共有パラメータ（?q=...）をチェック
 checkIncomingShare();
 
-// カレンダー表示用にデータを加工
+
+// =======================================================
+// 🔄 データ処理 & 予定の追加・削除機能
+// =======================================================
+
+// カレンダー表示用データの整形
 function getFormattedEvents() {
     const userEvents = schedules.map(item => {
         return {
@@ -117,6 +130,7 @@ addBtn.addEventListener('click', () => {
     isWeeklyCheck.checked = false;
 });
 
+// ローカルストレージ保存 & カレンダー再描画
 function saveAndRefresh() {
     localStorage.setItem('proCalendarSchedules', JSON.stringify(schedules));
     calendar.removeAllEvents();
@@ -124,13 +138,13 @@ function saveAndRefresh() {
     renderCheckList();
 }
 
-// カレンダー予定削除用関数の追加
+// 予定削除
 function deleteFromList(id) {
     schedules = schedules.filter(item => item.id !== id);
     saveAndRefresh();
 }
 
-// チェックリストの完了トグル関数の追加
+// チェックリスト完了切り替え
 function toggleComplete(id) {
     schedules = schedules.map(item => {
         if (item.id === id) {
@@ -141,15 +155,15 @@ function toggleComplete(id) {
     saveAndRefresh();
 }
 
-// チェックリスト表示
-// 現在選択されているタブを管理する変数（デフォルトは1週間分 'week'）
+
+// =======================================================
+// 📋 やること・チェックリスト表示 (タブ切り替え対応)
+// =======================================================
 let currentTab = 'week';
 
-// チェックリスト表示（タブ切り替え対応版）
 function renderCheckList() {
     todoList.innerHTML = '';
     
-    // 今日の日付の基準を作成（時間・分・秒を0にして日付だけで比較できるようにする）
     const today = new Date();
     today.setHours(0, 0, 0, 0); 
     
@@ -162,10 +176,9 @@ function renderCheckList() {
         ...schedules
     ];
 
-    // 選択されているタブに応じてフィルター条件を切り替える
     const filteredSchedules = allItems.filter(item => {
         const itemStart = new Date(item.start);
-        itemStart.setHours(0, 0, 0, 0); // 比較のために時間を合わせる
+        itemStart.setHours(0, 0, 0, 0);
 
         let itemEnd = item.end ? new Date(item.end) : new Date(item.start);
         if (item.end) {
@@ -175,10 +188,8 @@ function renderCheckList() {
         itemEnd.setHours(23, 59, 59, 999);
 
         if (currentTab === 'today') {
-            // 【今日だけ】予定の開始日から終了日の間に「今日」が含まれているか
             return itemStart <= today && itemEnd >= today;
         } else {
-            // 【直近1週間】以前と同様の条件
             return itemStart <= oneWeekLater && itemEnd >= today;
         }
     });
@@ -222,7 +233,7 @@ function renderCheckList() {
     });
 }
 
-// 👇 ここからタブのクリックイベント処理を追加
+// タブのクリックイベント設定
 const tabWeekBtn = document.getElementById('tab-week');
 const tabTodayBtn = document.getElementById('tab-today');
 
@@ -242,35 +253,40 @@ if (tabWeekBtn && tabTodayBtn) {
     });
 }
 
+
 // =======================================================
-// 🔗 【完全版】通信エラーなし！超圧縮・URL埋め込み型QR共有システム
+// 🔗 【完全・安定版】超圧縮・URL埋め込み型QR共有システム
 // =======================================================
 
+// 送信機能 (QRコード生成)
 exportBtn.addEventListener('click', () => {
-    // 1. 「今日」の基準を作成（時間を 00:00:00 にして日付のみで比較）
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 日本時間での「今日」の年月日文字列（YYYY-MM-DD）を取得
+    const todayStr = formatDate(new Date());
 
-    // 2. 今日以降の予定だけをフィルターする（過去の予定は除外）
-    const futureSchedules = schedules.filter(item => {
-        const eventDate = new Date(item.start);
-        eventDate.setHours(0, 0, 0, 0);
-        return eventDate >= today; // 今日以降の予定なら残す
-    });
+    // 文字列比較で「今日以降」の予定だけを抽出（タイムゾーンバグ防止）
+    const futureSchedules = schedules.filter(item => item.start >= todayStr);
 
-    // 3. 共有する予定が1つもない場合のチェック
     if (futureSchedules.length === 0) {
         alert('今日以降の予定がありません。未来の予定を追加してからQRコードを作成してください。');
         return;
     }
 
     try {
-        // 4. フィルターした「今日以降のデータのみ（futureSchedules）」を圧縮する
         const jsonString = JSON.stringify(futureSchedules);
-        const byteArray = new TextEncoder().encode(jsonString);
+        
+        // UTF-8エンコーダーを使用して絵文字や特殊文字を安全にバイト化
+        const encoder = new TextEncoder();
+        const byteArray = encoder.encode(jsonString);
         const compressed = pako.deflate(byteArray);
         
-        const base64Str = btoa(String.fromCharCode(...compressed))
+        // Uint8Array から Binary String への安全な変換
+        let binary = '';
+        const len = compressed.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(compressed[i]);
+        }
+        
+        const base64Str = btoa(binary)
             .replace(/\+/g, '-')
             .replace(/\//g, '_')
             .replace(/=+$/, '');
@@ -290,7 +306,7 @@ exportBtn.addEventListener('click', () => {
         qrModal.style.display = 'flex';
 
     } catch (e) {
-        alert('QRコードの作成に失敗しました。予定の文字数を少し減らしてみてください。');
+        alert('QRコードの作成に失敗しました。');
         console.error(e);
     }
 });
@@ -299,12 +315,14 @@ closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
+// 受信機能 (URLからのデータ復元 & 同期)
 function checkIncomingShare() {
     const urlParams = new URLSearchParams(window.location.search);
     const compressedBase64 = urlParams.get('q');
 
     if (!compressedBase64) return;
 
+    // URLのパラメータをきれいに削除（再読み込み時の重複処理防止）
     window.history.replaceState({}, document.title, window.location.pathname);
 
     if (!confirm('📥 新しい予定データが届きました！\nあなたのカレンダーに合流（同期）させますか？')) {
@@ -323,25 +341,36 @@ function checkIncomingShare() {
         }
 
         const decompressed = pako.inflate(bytes);
-        const jsonString = new TextDecoder().decode(decompressed);
+        
+        // UTF-8デコーダーを使用して日本語・絵文字テキストへ復元
+        const decoder = new TextDecoder('utf-8');
+        const jsonString = decoder.decode(decompressed);
+        
+        // JSONデータをパース（解析）
         const importedSchedules = JSON.parse(jsonString);
 
-        if (!Array.isArray(importedSchedules)) {
-            throw new Error('データ形式が正しくありません。');
+        // 💡 修正ポイント: データの存在チェックをより安全に実施
+        if (importedSchedules && typeof importedSchedules === 'object') {
+            // 配列形式に整えてループ処理
+            const scheduleList = Array.isArray(importedSchedules) ? importedSchedules : Object.values(importedSchedules);
+
+            scheduleList.forEach(newIn => {
+                if (newIn && newIn.id) {
+                    const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
+                    if (!isExist) {
+                        schedules.push(newIn);
+                    }
+                }
+            });
+
+            saveAndRefresh();
+            alert('🎉 予定の同期に成功しました！');
+        } else {
+            throw new Error('データが空または無効です。');
         }
 
-        importedSchedules.forEach(newIn => {
-            const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
-            if (!isExist) {
-                schedules.push(newIn);
-            }
-        });
-
-        saveAndRefresh();
-        alert('🎉 予定の同期に成功しました！');
-
     } catch (e) {
-        alert('予定の読み込みに失敗しました。QRコードが途中で切れている可能性があります。');
+        alert('予定の読み込みに失敗しました。QRコードデータが壊れている可能性があります。');
         console.error(e);
     }
 }
@@ -350,14 +379,12 @@ function checkIncomingShare() {
 // =======================================================
 // 🎒 独立した持ち物・メモ帳システム
 // =======================================================
-
 const memoInput = document.getElementById('memo-input');
 const memoAddBtn = document.getElementById('memo-add-btn');
 const memoListEl = document.getElementById('memo-list');
 
 let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
 
-// 初期表示とイベントの紐付け
 renderMemoList();
 
 memoAddBtn.addEventListener('click', addMemoItem);
@@ -429,5 +456,5 @@ function saveAndRefreshMemos() {
     renderMemoList();
 }
 
-// 最初の起動時用ロード
+// 最初の起動時用チェックリスト描画
 renderCheckList();
