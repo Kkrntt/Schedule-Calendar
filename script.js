@@ -14,23 +14,23 @@ const qrModal = document.getElementById('qr-modal');
 const qrcodeEl = document.getElementById('qrcode');
 const closeQrBtn = document.getElementById('close-qr-btn');
 
-// ⚠️【最重要】ご自身のGitHub PagesのURL（末尾に / ）を記述してください
+// ⚠️ ご自身のGitHub PagesのURL（末尾に / ）を記述してください
 const MY_SITE_URL = "https://kkrntt.github.io/Schedule-Calendar/"; 
 
 // ユーザー独自のデータの読み込み
 let schedules = JSON.parse(localStorage.getItem('proCalendarSchedules')) || [];
+let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
 
-// 学校の固定行事データ
+// 学校の固定行事データ（IDの重複を修正）
 const SCHOOL_EVENTS = [
     { id: 'school-1', title: '📝 記述模試', start: '2026-08-20', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-2', title: '🎪 記念祭', start: '2026-08-29', end: '2026-09-01', color: '#e67e22', allDay: true, isFixed: true }, 
     { id: 'school-3', title: '📝 学力テスト', start: '2026-09-03', color: '#2c3e50', allDay: true, isFixed: true },
-    { id: 'school-4', title: '✍️ 2学期中間試験', start: '2026-09-29', end: '2026-10-03', color: '#c0392b', allDay: true, isFixed: true } ,
-    { id: 'school-5', title: '✈ アメリカ海外研修', start: '2026-10-04', end: '2026-10-12', color: '#1B3B6F', allDay: true, isFixed: true } ,
-    { id: 'school-6', title: '🏠️ 代休', start: '2026-10-13', color: '#2c3e50', allDay: true, isFixed: true } ,
-    { id: 'school-1', title: '📝 進研模試', start: '2026-10-24', color: '#2c3e50', allDay: true, isFixed: true },
-    { id: 'school-1', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true }
-
+    { id: 'school-4', title: '✍️ 2学期中間試験', start: '2026-09-29', end: '2026-10-03', color: '#c0392b', allDay: true, isFixed: true },
+    { id: 'school-5', title: '✈ アメリカ海外研修', start: '2026-10-04', end: '2026-10-12', color: '#1B3B6F', allDay: true, isFixed: true },
+    { id: 'school-6', title: '🏠️ 代休', start: '2026-10-13', color: '#2c3e50', allDay: true, isFixed: true },
+    { id: 'school-7', title: '📝 進研模試', start: '2026-10-24', color: '#2c3e50', allDay: true, isFixed: true },
+    { id: 'school-8', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true }
 ];
 
 // 日付フォーマット関数 (YYYY-MM-DD)
@@ -41,7 +41,7 @@ function formatDate(date) {
     return `${y}-${m}-${d}`;
 }
 
-// 日付入力欄の初期値を「今日」に設定
+// 初期値設定
 dateInput.value = formatDate(new Date());
 
 
@@ -68,33 +68,25 @@ const calendar = new FullCalendar.Calendar(calendarEl, {
 });
 calendar.render();
 
-// ページ読み込み時にURL共有パラメータ（?q=...）をチェック
-checkIncomingShare();
-
 
 // =======================================================
 // 🔄 データ処理 & 予定の追加・削除機能
 // =======================================================
-
-// カレンダー表示用データの整形
 function getFormattedEvents() {
-    const userEvents = schedules.map(item => {
-        return {
-            id: item.id,
-            title: item.completed ? `✅ ${item.title}` : item.title,
-            start: item.start,
-            color: item.color,
-            allDay: item.allDay,
-            opacity: item.completed ? 0.5 : 1.0
-        };
-    });
+    const userEvents = schedules.map(item => ({
+        id: item.id,
+        title: item.completed ? `✅ ${item.title}` : item.title,
+        start: item.start,
+        color: item.color,
+        allDay: item.allDay,
+        opacity: item.completed ? 0.5 : 1.0
+    }));
     return [...SCHOOL_EVENTS, ...userEvents];
 }
 
-// 予定追加
 addBtn.addEventListener('click', () => {
     const baseDateStr = dateInput.value;
-    const title = titleInput.value;
+    const title = titleInput.value.trim();
     const color = colorInput.value;
     const isWeekly = isWeeklyCheck.checked;
 
@@ -107,27 +99,25 @@ addBtn.addEventListener('click', () => {
         let currentDate = new Date(baseDateStr);
         for (let i = 0; i < 12; i++) {
             const dateString = formatDate(currentDate);
-            const newSchedule = {
+            schedules.push({
                 id: String(Date.now() + i + Math.random()), 
                 title: title,
                 start: dateString,
                 color: color, 
                 allDay: true,
                 completed: false 
-            };
-            schedules.push(newSchedule);
+            });
             currentDate.setDate(currentDate.getDate() + 7);
         }
     } else {
-        const newSchedule = {
-            id: String(Date.now()),
+        schedules.push({
+            id: String(Date.now() + Math.random()),
             title: title,
             start: baseDateStr,
             color: color, 
             allDay: true,
             completed: false
-        };
-        schedules.push(newSchedule);
+        });
     }
 
     saveAndRefresh();
@@ -135,7 +125,6 @@ addBtn.addEventListener('click', () => {
     isWeeklyCheck.checked = false;
 });
 
-// ローカルストレージ保存 & カレンダー再描画
 function saveAndRefresh() {
     localStorage.setItem('proCalendarSchedules', JSON.stringify(schedules));
     calendar.removeAllEvents();
@@ -143,18 +132,14 @@ function saveAndRefresh() {
     renderCheckList();
 }
 
-// 予定削除
 function deleteFromList(id) {
     schedules = schedules.filter(item => item.id !== id);
     saveAndRefresh();
 }
 
-// チェックリスト完了切り替え
 function toggleComplete(id) {
     schedules = schedules.map(item => {
-        if (item.id === id) {
-            item.completed = !item.completed;
-        }
+        if (item.id === id) item.completed = !item.completed;
         return item;
     });
     saveAndRefresh();
@@ -162,7 +147,7 @@ function toggleComplete(id) {
 
 
 // =======================================================
-// 📋 やること・チェックリスト表示 (タブ切り替え対応)
+// 📋 やること・チェックリスト表示
 // =======================================================
 let currentTab = 'week';
 
@@ -238,7 +223,6 @@ function renderCheckList() {
     });
 }
 
-// タブのクリックイベント設定
 const tabWeekBtn = document.getElementById('tab-week');
 const tabTodayBtn = document.getElementById('tab-today');
 
@@ -260,31 +244,33 @@ if (tabWeekBtn && tabTodayBtn) {
 
 
 // =======================================================
-// 🔗 【完全・安定版】超圧縮・URL埋め込み型QR共有システム
+// 🔗 【同期機能】予定＆メモの複合QRコード共有システム
 // =======================================================
 
-// 送信機能 (QRコード生成)
+// QRコード作成（予定＋メモ）
 exportBtn.addEventListener('click', () => {
-    // 日本時間での「今日」の年月日文字列（YYYY-MM-DD）を取得
     const todayStr = formatDate(new Date());
 
-    // 文字列比較で「今日以降」の予定だけを抽出（タイムゾーンバグ防止）
+    // 今日以降の予定を抽出
     const futureSchedules = schedules.filter(item => item.start >= todayStr);
 
-    if (futureSchedules.length === 0) {
-        alert('今日以降の予定がありません。未来の予定を追加してからQRコードを作成してください。');
+    if (futureSchedules.length === 0 && memoList.length === 0) {
+        alert('共有対象（今日以降の予定またはメモ）がありません。');
         return;
     }
 
     try {
-        const jsonString = JSON.stringify(futureSchedules);
-        
-        // UTF-8エンコーダーを使用して絵文字や特殊文字を安全にバイト化
+        // 予定データとメモデータをひとつの構造体に統合
+        const exportData = {
+            s: futureSchedules.map(e => ({ i: e.id, t: e.title, d: e.start, c: e.color })), // 容量節約のためキー名を短縮
+            m: memoList.map(m => ({ i: m.id, t: m.text, c: m.completed ? 1 : 0 }))
+        };
+
+        const jsonString = JSON.stringify(exportData);
         const encoder = new TextEncoder();
         const byteArray = encoder.encode(jsonString);
         const compressed = pako.deflate(byteArray);
         
-        // Uint8Array から Binary String への安全な変換
         let binary = '';
         const len = compressed.byteLength;
         for (let i = 0; i < len; i++) {
@@ -311,7 +297,7 @@ exportBtn.addEventListener('click', () => {
         qrModal.style.display = 'flex';
 
     } catch (e) {
-        alert('QRコードの作成に失敗しました。');
+        alert('QRコードの作成に失敗しました。データ量が多すぎる可能性があります。');
         console.error(e);
     }
 });
@@ -320,17 +306,16 @@ closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
-// 受信機能 (URLからのデータ復元 & 同期)
+// 受信処理 (URLパラメータからの展開)
 function checkIncomingShare() {
     const urlParams = new URLSearchParams(window.location.search);
     const compressedBase64 = urlParams.get('q');
 
     if (!compressedBase64) return;
 
-    // URLのパラメータをきれいに削除（再読み込み時の重複処理防止）
     window.history.replaceState({}, document.title, window.location.pathname);
 
-    if (!confirm('📥 新しい予定データが届きました！\nあなたのカレンダーに合流（同期）させますか？')) {
+    if (!confirm('📥 共有データ（予定・メモ）が届きました！\nあなたのカレンダーとメモ帳に同期しますか？')) {
         return;
     }
 
@@ -346,51 +331,70 @@ function checkIncomingShare() {
         }
 
         const decompressed = pako.inflate(bytes);
-        
-        // UTF-8デコーダーを使用して日本語・絵文字テキストへ復元
         const decoder = new TextDecoder('utf-8');
         const jsonString = decoder.decode(decompressed);
         
-        // JSONデータをパース（解析）
-        const importedSchedules = JSON.parse(jsonString);
+        const importedData = JSON.parse(jsonString);
 
-        // 💡 修正ポイント: データの存在チェックをより安全に実施
-        if (importedSchedules && typeof importedSchedules === 'object') {
-            // 配列形式に整えてループ処理
-            const scheduleList = Array.isArray(importedSchedules) ? importedSchedules : Object.values(importedSchedules);
+        // 互換性チェック: 新データ構造(s, m) または 旧データ構造(配列)
+        let importedSchedules = [];
+        let importedMemos = [];
 
-            scheduleList.forEach(newIn => {
-                if (newIn && newIn.id) {
-                    const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
-                    if (!isExist) {
-                        schedules.push(newIn);
-                    }
-                }
-            });
-
-            saveAndRefresh();
-            alert('🎉 予定の同期に成功しました！');
-        } else {
-            throw new Error('データが空または無効です。');
+        if (Array.isArray(importedData)) {
+            importedSchedules = importedData;
+        } else if (typeof importedData === 'object' && importedData !== null) {
+            if (importedData.s) {
+                importedSchedules = importedData.s.map(e => ({
+                    id: e.i || String(Date.now() + Math.random()),
+                    title: e.t,
+                    start: e.d,
+                    color: e.c || '#3498db',
+                    allDay: true,
+                    completed: false
+                }));
+            }
+            if (importedData.m) {
+                importedMemos = importedData.m.map(m => ({
+                    id: m.i || 'memo-' + Date.now() + Math.random(),
+                    text: m.t,
+                    completed: Boolean(m.c)
+                }));
+            }
         }
 
+        // 予定の追加（重複防止）
+        importedSchedules.forEach(newIn => {
+            if (newIn && newIn.id) {
+                const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
+                if (!isExist) schedules.push(newIn);
+            }
+        });
+
+        // メモの追加（重複防止）
+        importedMemos.forEach(newMemo => {
+            if (newMemo && newMemo.id) {
+                const isExist = memoList.some(oldMemo => oldMemo.id === newMemo.id);
+                if (!isExist) memoList.push(newMemo);
+            }
+        });
+
+        saveAndRefresh();
+        saveAndRefreshMemos();
+        alert('🎉 予定とメモの同期に成功しました！');
+
     } catch (e) {
-        alert('予定の読み込みに失敗しました。QRコードデータが壊れている可能性があります。');
+        alert('データの読み込みに失敗しました。URLまたはQRコードが破損しています。');
         console.error(e);
     }
 }
 
 
 // =======================================================
-// 🎒 独立した持ち物・メモ帳システム
+// 🎒 持ち物・メモ帳システム
 // =======================================================
 const memoInput = document.getElementById('memo-input');
 const memoAddBtn = document.getElementById('memo-add-btn');
 const memoListEl = document.getElementById('memo-list');
-
-let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
-
-renderMemoList();
 
 memoAddBtn.addEventListener('click', addMemoItem);
 memoInput.addEventListener('keypress', (e) => {
@@ -443,9 +447,7 @@ function renderMemoList() {
 
 function toggleMemoComplete(id) {
     memoList = memoList.map(item => {
-        if (item.id === id) {
-            item.completed = !item.completed;
-        }
+        if (item.id === id) item.completed = !item.completed;
         return item;
     });
     saveAndRefreshMemos();
@@ -461,5 +463,7 @@ function saveAndRefreshMemos() {
     renderMemoList();
 }
 
-// 最初の起動時用チェックリスト描画
+// 初期実行
 renderCheckList();
+renderMemoList();
+checkIncomingShare();
