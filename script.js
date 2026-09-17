@@ -25,7 +25,12 @@ const SCHOOL_EVENTS = [
     { id: 'school-1', title: '📝 記述模試', start: '2026-08-20', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-2', title: '🎪 記念祭', start: '2026-08-29', end: '2026-09-01', color: '#e67e22', allDay: true, isFixed: true }, 
     { id: 'school-3', title: '📝 学力テスト', start: '2026-09-03', color: '#2c3e50', allDay: true, isFixed: true },
-    { id: 'school-4', title: '✍️ 2学期中間試験', start: '2026-09-29', end: '2026-10-03', color: '#c0392b', allDay: true, isFixed: true } 
+    { id: 'school-4', title: '✍️ 2学期中間試験', start: '2026-09-29', end: '2026-10-03', color: '#c0392b', allDay: true, isFixed: true } ,
+    { id: 'school-5', title: '✈ アメリカ海外研修', start: '2026-10-04', end: '2026-10-12', color: '#1B3B6F', allDay: true, isFixed: true } ,
+    { id: 'school-6', title: '🏠️ 代休', start: '2026-10-13', color: '#2c3e50', allDay: true, isFixed: true } ,
+    { id: 'school-1', title: '📝 進研模試', start: '2026-10-24', color: '#2c3e50', allDay: true, isFixed: true },
+    { id: 'school-1', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true }
+
 ];
 
 // 日付フォーマット関数 (YYYY-MM-DD)
