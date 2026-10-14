@@ -30,8 +30,10 @@ const SCHOOL_EVENTS = [
     { id: 'school-5', title: '✈ アメリカ海外研修', start: '2026-10-04', end: '2026-10-12', color: '#1B3B6F', allDay: true, isFixed: true },
     { id: 'school-6', title: '🏠️ 代休', start: '2026-10-13', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-7', title: '📝 進研模試', start: '2026-10-24', color: '#2c3e50', allDay: true, isFixed: true },
-    { id: 'school-8', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true }
-];
+    { id: 'school-8', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true },
+    { id: 'school-8', title: '🏠️ 創立記念日', start: '2026-10-15', color: '#2c3e50', allDay: true, isFixed: true }
+]; 
+
 
 // 日付フォーマット関数 (YYYY-MM-DD)
 function formatDate(date) {
