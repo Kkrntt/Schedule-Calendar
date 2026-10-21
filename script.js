@@ -476,3 +476,69 @@ function saveAndRefreshMemos() {
 renderCheckList();
 renderMemoList();
 checkIncomingShare();
+
+// =======================================================
+// 🏫 クラス別時間割機能
+// =======================================================
+const TIMETABLE_DATA = {
+    '24H 文型': [
+        ['1限', '地基', '古探', '体育', '日地', '世探'],
+        ['2限', '公共', '論表', '数乙', '数乙', 'コミ'],
+        ['3限', '日地', '数甲', 'コミ', '論表', '地基'],
+        ['4限', 'コミ', '生基', '論文', '生基', '数甲'],
+        ['5限', '論文', '世探', '世探', '古探', '論文'],
+        ['6限', '数甲', '保健', '探究', 'ＧＥ', '数乙'],
+        ['7限', '体育', '公共', '探究', 'HR', 'ー']
+    ],
+    '24H 理型': [
+        ['1限', '論国', '古探', '体育', '物生', '理基'],
+        ['2限', '公共', '論表', '数乙', '数乙', 'コミ'],
+        ['3限', '物生', '数甲', 'コミ', '論表', '日地'],
+        ['4限', 'コミ', '物生', '論国', '化学', '数甲'],
+        ['5限', '理基', '日地', '化学', '古探', '物生'],
+        ['6限', '数甲', '保健', '探究', 'ＧＥ', '数乙'],
+        ['7限', '体育', '公共', '探究', 'HR', 'ー']
+    ],
+    '2◯H': [
+        ['1限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['2限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['3限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['4限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['5限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['6限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇'],
+        ['7限', '〇〇', '〇〇', '〇〇', '〇〇', '〇〇']
+    ]
+};
+
+const classSelect = document.getElementById('class-select');
+const timetableBody = document.getElementById('timetable-body');
+
+function renderTimetable(classKey) {
+    if (!timetableBody) return;
+    timetableBody.innerHTML = '';
+
+    const data = TIMETABLE_DATA[classKey] || [];
+
+    data.forEach((row) => {
+        const tr = document.createElement('tr');
+        row.forEach((cellText) => {
+            const td = document.createElement('td');
+            td.textContent = cellText;
+            tr.appendChild(td);
+        });
+        timetableBody.appendChild(tr);
+    });
+}
+
+if (classSelect) {
+    classSelect.addEventListener('change', (e) => {
+        const selectedClass = e.target.value;
+        renderTimetable(selectedClass);
+        localStorage.setItem('selectedClass', selectedClass);
+    });
+
+    // 記憶されていたクラスを取得（デフォルトは24H 文型）
+    const savedClass = localStorage.getItem('selectedClass') || '24H 文型';
+    classSelect.value = savedClass;
+    renderTimetable(savedClass);
+}
