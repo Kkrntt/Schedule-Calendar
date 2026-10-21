@@ -451,3 +451,18 @@ button:hover { background-color: #2c3e50; }
         font-size: 12px;
     }
 }
+
+/* スマホ版でのレイアウト調整 */
+@media (max-width: 768px) {
+    #todo-list-container,
+    #memo-list-container,
+    .timetable-container {
+        height: auto !important; /* 固定高さを解除 */
+        max-height: none !important;
+        margin-bottom: 15px;
+    }
+    
+    .timetable-scroll {
+        overflow-x: auto; /* 時間割が横にはみ出ないようスクロール可能にする */
+    }
+}
