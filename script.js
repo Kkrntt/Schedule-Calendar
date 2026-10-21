@@ -31,7 +31,14 @@ const SCHOOL_EVENTS = [
     { id: 'school-6', title: '🏠️ 代休', start: '2026-10-13', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-7', title: '📝 進研模試', start: '2026-10-24', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-8', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true },
-    { id: 'school-8', title: '🏠️ 創立記念日', start: '2026-10-15', color: '#2c3e50', allDay: true, isFixed: true }
+    { id: 'school-9', title: '🏠️ 創立記念日', start: '2026-10-15', color: '#2c3e50', allDay: true, isFixed: true },
+    { id: 'school-10', title: '🏠️ 代休', start: '2026-11-18', color: '#2c3e50', allDay: true, isFixed: true },
+    { id: 'school-11', title: '📝 2学期期末試験', start: '2026-11-26', end: '2026-11-28', color: '#c0392b', allDay: true, isFixed: true } ,
+    { id: 'school-12', title: '📝 2学期期末試験', start: '2026-11-30', end: '2026-12-03', color: '#c0392b', allDay: true, isFixed: true },
+    { id: 'school-12', title: '🧑‍🤝‍🧑 保護者懇談', start: '2026-12-18', color: '#009D59', allDay: true, isFixed: true },
+    { id: 'school-12', title: '🧑‍🤝‍🧑 保護者懇談', start: '2026-12-21', end: '2026-12-23', color: '#009D59', allDay: true, isFixed: true },
+    { id: 'school-12', title: '🏫 終業式', start: '2026-12-23', color: '#e67e22', allDay: true, isFixed: true }
+
 ]; 
 
 
