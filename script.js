@@ -21,7 +21,10 @@ const MY_SITE_URL = "https://kkrntt.github.io/Schedule-Calendar/";
 let schedules = JSON.parse(localStorage.getItem('proCalendarSchedules')) || [];
 let memoList = JSON.parse(localStorage.getItem('proCalendarMemos')) || [];
 
-// 学校の固定行事データ（IDの重複を修正）
+// =======================================================
+// 🏫 学校の固定行事データ（管理者のみコード上で編集可能）
+// =======================================================
+// ※ display: 'background' を指定したイベントはマス全体の背景色が塗られます
 const SCHOOL_EVENTS = [
     { id: 'school-1', title: '📝 記述模試', start: '2026-08-20', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-2', title: '🎪 記念祭', start: '2026-08-29', end: '2026-09-01', color: '#e67e22', allDay: true, isFixed: true }, 
@@ -33,18 +36,20 @@ const SCHOOL_EVENTS = [
     { id: 'school-8', title: '🧑‍🤝‍🧑 授業公開', start: '2026-10-31', color: '#e67e22', allDay: true, isFixed: true },
     { id: 'school-9', title: '🏠️ 創立記念日', start: '2026-10-15', color: '#2c3e50', allDay: true, isFixed: true },
     { id: 'school-10', title: '🏠️ 代休', start: '2026-11-18', color: '#2c3e50', allDay: true, isFixed: true },
-    { id: 'school-11', title: '📝 2学期期末試験', start: '2026-11-26', end: '2026-11-28', color: '#c0392b', allDay: true, isFixed: true } ,
+    { id: 'school-11', title: '📝 2学期期末試験', start: '2026-11-26', end: '2026-11-28', color: '#c0392b', allDay: true, isFixed: true },
     { id: 'school-12', title: '📝 2学期期末試験', start: '2026-11-30', end: '2026-12-03', color: '#c0392b', allDay: true, isFixed: true },
     { id: 'school-13', title: '🧑‍🤝‍🧑 保護者懇談', start: '2026-12-18', color: '#009D59', allDay: true, isFixed: true },
     { id: 'school-14', title: '🧑‍🤝‍🧑 保護者懇談', start: '2026-12-21', end: '2026-12-23', color: '#009D59', allDay: true, isFixed: true },
     { id: 'school-15', title: '🏫 終業式', start: '2026-12-23', color: '#e67e22', allDay: true, isFixed: true },
-    { id: 'school-16', title: '❄ 冬休み', start: '2026-12-24', end: '2027-01-07', color: '#54acdb', allDay: true, isFixed: true },
+    
+    // 💡 ❄️ 冬休み：マス目全体を薄水色（#D4E1E8）にする背景イベント設定
+    // ※ FullCalendarの仕様上、endは「最終日の翌日（1月8日）」を指定します
+    { id: 'school-16', title: '冬休み', start: '2026-12-24', end: '2027-01-07', color: '#65a5d5', display: 'background', isFixed: true },
+    
     { id: 'school-17', title: '📝 学力テスト', start: '2027-01-07', end:'2027-01-09', color: '#c0392b', allDay: true, isFixed: true },
     { id: 'school-18', title: '📝 進研模試', start: '2027-01-15', end:'2027-01-17', color: '#c0392b', allDay: true, isFixed: true },
     { id: 'school-19', title: '💡 探究発表会', start: '2027-01-22', color: '#e67e22', allDay: true, isFixed: true }
-
 ]; 
-
 
 // 日付フォーマット関数 (YYYY-MM-DD)
 function formatDate(date) {
@@ -55,11 +60,25 @@ function formatDate(date) {
 }
 
 // 初期値設定
-dateInput.value = formatDate(new Date());
+if (dateInput) dateInput.value = formatDate(new Date());
 
+// イベントフォーマット生成関数
+// 修正後の getFormattedEvents 関数
+function getFormattedEvents() {
+    const userEvents = schedules.map(item => {
+        return {
+            id: item.id,
+            title: item.completed ? `✅ ${item.title}` : item.title,
+            start: item.start,
+            color: item.color, // 指定されたカラーコードをそのまま適用
+            allDay: true
+        };
+    });
+    return [...SCHOOL_EVENTS, ...userEvents];
+}
 
 // =======================================================
-// 🗓️ FullCalendar の初期化と描画
+// 🗓️ FullCalendar の初期化（1回のみ実行）
 // =======================================================
 const calendar = new FullCalendar.Calendar(calendarEl, {
     initialView: 'dayGridMonth',
@@ -85,18 +104,6 @@ calendar.render();
 // =======================================================
 // 🔄 データ処理 & 予定の追加・削除機能
 // =======================================================
-function getFormattedEvents() {
-    const userEvents = schedules.map(item => ({
-        id: item.id,
-        title: item.completed ? `✅ ${item.title}` : item.title,
-        start: item.start,
-        color: item.color,
-        allDay: item.allDay,
-        opacity: item.completed ? 0.5 : 1.0
-    }));
-    return [...SCHOOL_EVENTS, ...userEvents];
-}
-
 addBtn.addEventListener('click', () => {
     const baseDateStr = dateInput.value;
     const title = titleInput.value.trim();
@@ -175,7 +182,7 @@ function renderCheckList() {
     oneWeekLater.setHours(23, 59, 59, 999); 
 
     const allItems = [
-        ...SCHOOL_EVENTS.map(e => ({ ...e, completed: false, isSchool: true })),
+        ...SCHOOL_EVENTS.filter(e => e.display !== 'background').map(e => ({ ...e, completed: false, isSchool: true })),
         ...schedules
     ];
 
@@ -219,7 +226,7 @@ function renderCheckList() {
                 <div class="todo-left">
                     <input type="checkbox" disabled>
                     <span class="task-date" style="background: #2c3e50; color: #fff;">学校行事</span>
-                    <span style="border-left: 4px solid ${item.color}; padding-left: 6px; font-weight: bold;">${item.title}</span>
+                    <span style="border-left: 4px solid ${item.color || '#34495e'}; padding-left: 6px; font-weight: bold;">${item.title}</span>
                 </div>
                 <span style="font-size: 12px; color: #7f8c8d; padding-right: 5px;">固定</span>
             `;
@@ -259,12 +266,9 @@ if (tabWeekBtn && tabTodayBtn) {
 // =======================================================
 // 🔗 【同期機能】予定＆メモの複合QRコード共有システム
 // =======================================================
-
-// QRコード作成（予定＋メモ）
 exportBtn.addEventListener('click', () => {
     const todayStr = formatDate(new Date());
 
-    // 今日以降の予定を抽出
     const futureSchedules = schedules.filter(item => item.start >= todayStr);
 
     if (futureSchedules.length === 0 && memoList.length === 0) {
@@ -273,9 +277,8 @@ exportBtn.addEventListener('click', () => {
     }
 
     try {
-        // 予定データとメモデータをひとつの構造体に統合
         const exportData = {
-            s: futureSchedules.map(e => ({ i: e.id, t: e.title, d: e.start, c: e.color })), // 容量節約のためキー名を短縮
+            s: futureSchedules.map(e => ({ i: e.id, t: e.title, d: e.start, c: e.color })),
             m: memoList.map(m => ({ i: m.id, t: m.text, c: m.completed ? 1 : 0 }))
         };
 
@@ -319,7 +322,6 @@ closeQrBtn.addEventListener('click', () => {
     qrModal.style.display = 'none';
 });
 
-// 受信処理 (URLパラメータからの展開)
 function checkIncomingShare() {
     const urlParams = new URLSearchParams(window.location.search);
     const compressedBase64 = urlParams.get('q');
@@ -349,7 +351,6 @@ function checkIncomingShare() {
         
         const importedData = JSON.parse(jsonString);
 
-        // 互換性チェック: 新データ構造(s, m) または 旧データ構造(配列)
         let importedSchedules = [];
         let importedMemos = [];
 
@@ -375,7 +376,6 @@ function checkIncomingShare() {
             }
         }
 
-        // 予定の追加（重複防止）
         importedSchedules.forEach(newIn => {
             if (newIn && newIn.id) {
                 const isExist = schedules.some(oldIn => oldIn.id === newIn.id);
@@ -383,7 +383,6 @@ function checkIncomingShare() {
             }
         });
 
-        // メモの追加（重複防止）
         importedMemos.forEach(newMemo => {
             if (newMemo && newMemo.id) {
                 const isExist = memoList.some(oldMemo => oldMemo.id === newMemo.id);
@@ -409,10 +408,12 @@ const memoInput = document.getElementById('memo-input');
 const memoAddBtn = document.getElementById('memo-add-btn');
 const memoListEl = document.getElementById('memo-list');
 
-memoAddBtn.addEventListener('click', addMemoItem);
-memoInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') addMemoItem();
-});
+if (memoAddBtn && memoInput) {
+    memoAddBtn.addEventListener('click', addMemoItem);
+    memoInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') addMemoItem();
+    });
+}
 
 function addMemoItem() {
     const text = memoInput.value.trim();
@@ -430,6 +431,7 @@ function addMemoItem() {
 }
 
 function renderMemoList() {
+    if (!memoListEl) return;
     memoListEl.innerHTML = '';
 
     if (memoList.length === 0) {
@@ -476,10 +478,6 @@ function saveAndRefreshMemos() {
     renderMemoList();
 }
 
-// 初期実行
-renderCheckList();
-renderMemoList();
-checkIncomingShare();
 
 // =======================================================
 // 🏫 クラス別時間割機能
@@ -552,7 +550,7 @@ const TIMETABLE_DATA = {
         ['4限', '公共', '物生', '化学', '公共', '地探'],
         ['5限', '理基', '数乙', '数乙', '数乙', '物生'],
         ['6限', '数甲', '探究', 'コミ', '論国', '古探'],
-        ['7限', '体育', '探究', '地探', 'HR', 'ー'],
+        ['7限', '体育', '探究', '地探', 'HR', 'ー']
     ],
 
     '27H': [
@@ -623,8 +621,12 @@ if (classSelect) {
         localStorage.setItem('selectedClass', selectedClass);
     });
 
-    // 記憶されていたクラスを取得（デフォルトは24H 文型）
     const savedClass = localStorage.getItem('selectedClass') || '24H 文型';
     classSelect.value = savedClass;
     renderTimetable(savedClass);
 }
+
+// 初期実行
+renderCheckList();
+renderMemoList();
+checkIncomingShare();
